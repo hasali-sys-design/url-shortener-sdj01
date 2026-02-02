@@ -1,5 +1,19 @@
-import postgres from 'postgres'
+//import sql from '$lib/server/db.ts'
+//import type { RequestHandler } from './$types';
+import  sql from '$lib/server/db';
 
-const sql = postgres({})
+export const load = async () => {
+  try {
+    const result = await sql`SELECT now() as time`;
 
-export default sql
+    return {
+      ok: true,
+      db_time: result[0].time
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: String(err)
+    };
+  }
+};
