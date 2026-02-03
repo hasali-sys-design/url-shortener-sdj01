@@ -2,8 +2,16 @@
     import type { PageProps } from './$types';
     let { data }: PageProps =$props();
 </script>
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<h1>SDJ 01: URL Shortener</h1>
+
 <div>
     <h3>Database Time: {data?.db_time}</h3>
 </div>
+
+<form method="POST">
+    <label>
+        Long URL:
+        <input type="url" name="long_url" required />
+    </label>
+    <button type="submit">Get Shortened URL</button>
+</form>
