@@ -4,9 +4,7 @@
 </script>
 <h1>SDJ 01: URL Shortener</h1>
 
-<div>
-    <h3>Database Time: {data?.db_time}</h3>
-</div>
+
 
 <form method="POST">
     <label>
