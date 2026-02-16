@@ -1,10 +1,25 @@
-const ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+import { Cipher } from "feistel-cipher";
 
-export function base62Encode(num: number): string {
+const SOURCE = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const KEY = 'af18d94ce1b3ecbf3a1787ef362a8c3487779badf353c364324696b765d3fd63'
+const ROUNDS = 10
+
+const cipher = new Cipher(KEY, ROUNDS)
+
+export function urlSuffixGen(id: number): string{
+  const idString = id.toString();
+
+  const obfuscated = cipher.encrypt(idString)
+  const obfuscatedId = BigInt('0x' + obfuscated.toString('hex'));
+
+  return base62Encode(obfuscatedId);
+}
+
+function base62Encode(num: bigint): string {
   let s = '';
   while (num > 0) {
-    s = ALPHABET[num % 62] + s;
-    num = Math.floor(num / 62);
+    s = SOURCE[Number(num % 62n)] + s;
+    num /= 62n;
   }
   return s || '0';
 }

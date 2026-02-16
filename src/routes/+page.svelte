@@ -18,6 +18,3 @@
     <h3>Your Shortened URL: <span><a href="https://localhost:5173/{form.shortUrlSuffix}" >https://localhost:5173/{form.shortUrlSuffix}</a></span></h3>
 </div>
 {/if}
-{#if form?.error}
-  <p class="error">{form.message}</p>
-{/if}

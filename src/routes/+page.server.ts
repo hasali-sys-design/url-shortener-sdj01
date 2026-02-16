@@ -1,7 +1,7 @@
 //import sql from '$lib/server/db.ts'
 //import type { RequestHandler } from './$types';
 import  sql from '$lib/server/db';
-import { base62Encode } from '$lib/Helpers/encoder';
+import { urlSuffixGen } from '$lib/Helpers/encoder';
 
 export const actions = {
   default : async ({ request }) => {
@@ -11,23 +11,32 @@ export const actions = {
     if (typeof url !== 'string' || !url) {
       return { success: false, message: 'Invalid URL' }
     }
-   await sql`DEALLOCATE ALL`;
+ 
     try{
-      const [entry] = await sql`INSERT INTO urlmappings (long_url) VALUES (${ url }) RETURNING id`;
-      const shortUrlSuffix= base62Encode(entry.id)
 
-      await sql`
+      const result = await sql.begin(async (tx) =>{
+
+        const [entry] = await tx`
+          INSERT INTO urlmappings (long_url) 
+          VALUES (${ url }) RETURNING id
+          `
+
+        const shortUrl= urlSuffixGen(entry.id)
+        
+        await tx`
         UPDATE urlmappings 
-        SET short_url = ${shortUrlSuffix}
+        SET short_url = ${shortUrl}
         WHERE id = ${entry.id}
-      `
-      return { success: true, shortUrlSuffix}
-    } catch (error) {
+        `
+        return shortUrl
+      })
+       return { success: true, shortUrlSuffix: result };
+      } catch (error) {
+        
+        console.error(error);
+        return { success: false, message: 'Could not add URL to database.' };
+      }
       
-      console.error(error);
-      return { error, message: 'Could not add URL to database.' };
-    }
-    
   }
 }
 
