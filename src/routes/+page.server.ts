@@ -28,7 +28,7 @@ export const actions = {
           INSERT INTO urlmappings (long_url) 
           VALUES (${longUrl}) 
           ON CONFLICT (long_url)
-          DO UPDATE SET long_url = EXLUCDED.long_url
+          DO UPDATE SET long_url = EXCLUDED.long_url
           RETURNING id
           `;
 
@@ -39,6 +39,31 @@ export const actions = {
         SET short_url = ${shortUrlSuffix}
         WHERE id = ${entry.id}
         `;
+        await tx`
+          SELECT short_url
+          FROM urlmappings
+          WHERE long_url = $1
+            AND expirayTime >= NOW()
+          LIMIT 1
+        `;
+
+        await tx`
+        WITH candidate AS (
+          SELECT id
+          FROM urlmappings
+          WHERE expiryTime < NOW()
+          LIMIT 1
+          FOR UPDATE SKIP LOCKED
+        )
+        UPDATE urlmappings
+        SET long_url = $1,
+            expiryTime = NOW() + INTERVAL '1 year'
+        FROM candidate
+        WHERE urlmappings.id = candidate.id
+        RETURNING short_url
+        `;
+
+        
         return `${origin}/${shortUrlSuffix}`;
       });
       return { success: true, shortUrl: result };
