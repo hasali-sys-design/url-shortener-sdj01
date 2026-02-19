@@ -3,6 +3,7 @@ import { urlSuffixGen } from "$lib/Helpers/encoder";
 import type { Sql, TransactionSql } from "postgres";
 import type { PageServerLoad } from "./$types.js";
 
+
 export const load: PageServerLoad = async ({url}) => {
   
   const shortUrlList = await sql`
@@ -43,21 +44,21 @@ export const actions = {
           SELECT short_url
           FROM urlmappings
           WHERE long_url = $1
-            AND expirayTime >= NOW()
+            AND expiray_time >= NOW()
           LIMIT 1
         `;
-
+        //find unused short urls
         await tx`
         WITH candidate AS (
           SELECT id
           FROM urlmappings
-          WHERE expiryTime < NOW()
+          WHERE expiry_time < NOW()
           LIMIT 1
           FOR UPDATE SKIP LOCKED
         )
         UPDATE urlmappings
         SET long_url = $1,
-            expiryTime = NOW() + INTERVAL '1 year'
+            expiry_time = NOW() + INTERVAL '1 year'
         FROM candidate
         WHERE urlmappings.id = candidate.id
         RETURNING short_url
