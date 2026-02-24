@@ -22,8 +22,8 @@ with psycopg.connect(
     port=DB_PORT
 ) as conn:
     with conn.cursor() as cur:
-        cur.copy(
-            "INSERT INTO urlmappings (short_url, long_url) VALUES (%s, %s)",
-            ("23raUi","pythontest")
-        )
-        conn.commit()
+        with open("suffix_file.tsv", 'r', encoding='utf-8') as f:
+            with cur.copy("COPY urlmappings (short_url, status) FROM STDIN (FORMAT CSV, DELIMITER E'\\t')") as copy:
+                for line in f:
+                    copy.write(line)
+        
