@@ -9,6 +9,7 @@ export const load: PageServerLoad = async ({url}) => {
   const shortUrlList = await sql`
     SELECT short_url
     FROM urlmappings
+    WHERE long_url IS NOT NULL
     `;
 
   return { origin:url.origin, shortUrlList };
@@ -25,47 +26,40 @@ export const actions = {
 
     try {
       const result = await sql.begin(async (tx: any) => {
-        const [entry] = await tx`
-          INSERT INTO urlmappings (long_url) 
-          VALUES (${longUrl}) 
-          ON CONFLICT (long_url)
-          DO UPDATE SET long_url = EXCLUDED.long_url
-          RETURNING id
-          `;
-
-        const shortUrlSuffix = urlSuffixGen(entry.id);
-
-        await tx`
-        UPDATE urlmappings 
-        SET short_url = ${shortUrlSuffix}
-        WHERE id = ${entry.id}
-        `;
-        await tx`
+        
+       const[existingRow] = await tx`
           SELECT short_url
           FROM urlmappings
-          WHERE long_url = $1
-            AND expiray_time >= NOW()
+          WHERE long_url = ${longUrl}
+            AND expiry_time >= NOW()
           LIMIT 1
+          
         `;
         //find unused short urls
-        await tx`
-        WITH candidate AS (
-          SELECT id
-          FROM urlmappings
-          WHERE expiry_time < NOW()
-          LIMIT 1
-          FOR UPDATE SKIP LOCKED
-        )
-        UPDATE urlmappings
-        SET long_url = $1,
-            expiry_time = NOW() + INTERVAL '1 year'
-        FROM candidate
-        WHERE urlmappings.id = candidate.id
-        RETURNING short_url
-        `;
+        if(existingRow){
+          return `${origin}/${existingRow.short_url}`
+        }else{
 
-        
-        return `${origin}/${shortUrlSuffix}`;
+          const [claimed] = await tx`
+          WITH candidate AS (
+            SELECT id
+            FROM urlmappings
+            WHERE expiry_time < NOW()
+            LIMIT 1
+            FOR UPDATE SKIP LOCKED
+            )
+            UPDATE urlmappings
+            SET long_url = ${longUrl},
+            expiry_time = NOW() + INTERVAL '1 year'
+            FROM candidate
+            WHERE urlmappings.id = candidate.id
+            RETURNING short_url
+            `;
+            
+            
+            return `${origin}/${claimed.short_url}`;
+          
+        }
       });
       return { success: true, shortUrl: result };
     } catch (error) {
