@@ -23,6 +23,7 @@
 	},
 	"dependencies": {
 		"feistel-cipher": "^1.5.15",
-		"postgres": "^3.4.8"
+		"postgres": "^3.4.8",
+		"redis": "^5.11.0"
 	}
 }
