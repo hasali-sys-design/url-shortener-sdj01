@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({url}) => {
     SELECT short_url
     FROM urlmappings
     WHERE long_url IS NOT NULL
-    `;
+    `
 
   return { origin:url.origin, shortUrlList };
 };
