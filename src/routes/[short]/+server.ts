@@ -5,7 +5,6 @@ import redis from '$lib/server/redis'
 export const GET = async ({ params }) => {
    
     const cachedKey = `url:${params.short}`
-
     const cachedUrl = await redis.get(cachedKey)
     if(cachedUrl)
         throw redirect(302, cachedUrl)
