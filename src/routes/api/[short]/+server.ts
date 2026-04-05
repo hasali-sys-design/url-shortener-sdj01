@@ -13,7 +13,8 @@ export const GET = async ({ params }) => {
             EXTRACT(EPOCH FROM (expiry_time - NOW())) AS ttl 
         FROM urlmappings
         WHERE short_url = ${params.short}
-    `;
+    `
+    ;
 
     if (!row) {
         throw error(404, "Short URL not found");
