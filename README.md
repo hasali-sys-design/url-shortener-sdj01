@@ -28,3 +28,10 @@ to the long url.
 - We need to be careful on how we pre-seed, don't want to create billions of
 suffixes right off the bat
 - Also need to give consideration on how we shard the data.
+
+## Start
+```
+docker run -d -p 6379:6379 --name redis redis
+npm run build
+pm2 start build/index.js -i max
+```
