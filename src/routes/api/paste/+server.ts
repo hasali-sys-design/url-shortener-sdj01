@@ -1,9 +1,9 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { S3_BUCKET } from '$env/static/private';
+import { s3 } from '$lib/server/s3';
 
-const client = new S3Client({ region: 'us-east-2' });
 
 export const POST:RequestHandler = async ({ request }) => {
   const pasteId = crypto.randomUUID(); // or your short ID logic
@@ -14,7 +14,7 @@ export const POST:RequestHandler = async ({ request }) => {
     ContentType: 'text/plain'
   });
 
-  const uploadUrl = await getSignedUrl(client, command, {
+  const uploadUrl = await getSignedUrl(s3, command, {
     expiresIn: 60
   });
 

@@ -14,6 +14,7 @@ export const load: PageServerLoad = async ({url}) => {
 
   return { origin:url.origin, shortUrlList };
 };
+
 export const actions = {
   default: async ({ request, url }) => {
     const formData = await request.formData();
