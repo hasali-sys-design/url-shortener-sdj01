@@ -1,45 +1,54 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
     import type { ActionData, PageProps } from './$types';
+
     let { data, form } =$props();
     let content = $state('')
     let loading = $state(false)
-    let error = $state()
-
+    
     const submitPaste = async () =>{
         loading = true
-        error = null
+        
         try{
-
             const res = await fetch ('/api/paste', {method:'POST'})
             const { uploadUrl } = await res.json()
             
-            await fetch(uploadUrl, {
+            
+            const uploadRes = await fetch(uploadUrl, {
                 method: 'PUT',
                 body: content,
                 headers: {
                     'Content-Type': 'text/plain'
                 }
-            } )
-            console.log('UPLOAD STATUS:', res.status);
-
-const text = await res.text();
-console.log('UPLOAD RESPONSE:', text);
+            })
         } catch(err){
-            error="Upload Failed"
+            console.log(err)
         } finally {
             loading = false;
         }
     }
 </script>
-<h1>SDJ 01: URL Shortener</h1>
+<h1>SDJ 01 + 02: URL Shortener/Paste Bin</h1>
 
-<label for="paste">New Paste</label>
-<textarea name="paste" bind:value={content}></textarea>
-<form method="POST">
+
+<form method="POST" action="?/getS3SignedUrl" use:enhance={({ }) => {
+    return async ({ result }) => {
+        if(result.type === 'success'){
+            //await fetch(result.data.uploadUrl, { method: 'PUT', body: content });
+
+        }
+    }
+}}>
+    <label for="paste">New Paste</label>
+    <textarea name="paste" bind:value={content}></textarea>
+
+    <!--
+    SDJ01 
     <label>
         Long URL:
         <input type="text" name="long_url" required />
-    </label>
+    </label> 
+    -->
 
     <button type="submit" onclick={submitPaste}>{loading ? 'Uploading...' : 'Create Paste'}</button>
 </form>

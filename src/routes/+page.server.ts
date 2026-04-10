@@ -3,44 +3,51 @@ import { urlSuffixGen } from "$lib/Helpers/encoder";
 import type { Sql, TransactionSql } from "postgres";
 import type { PageServerLoad } from "./$types.js";
 
+import { error } from "@sveltejs/kit";
 
-export const load: PageServerLoad = async ({url}) => {
-  
+export const load: PageServerLoad = async ({ url }) => {
   const shortUrlList = await sql`
     SELECT short_url
     FROM urlmappings
     WHERE long_url IS NOT NULL
-    `
+    `;
 
-  return { origin:url.origin, shortUrlList };
+  return { origin: url.origin, shortUrlList };
 };
 
 export const actions = {
-  default: async ({ request, url }) => {
-    const formData = await request.formData();
-    const longUrl = formData.get("long_url");
-    const origin = url.origin;
+  getS3SignedUrl: async ({ request, fetch }) => {
+    const data = await request.formData()
+    //SDJ02
+    const content = data.get('content')
 
-    if (typeof longUrl !== "string" || !longUrl) {
-      return { success: false, message: "Invalid URL" };
-    }
+    const res = await fetch('/api/paste', {method:'POST'})
+    if (!res.ok) return error(500, { message: 'Failed to create paste'})
+
+    const { pasteId, uploadUrl } = await res.json()
+    return { pasteId, uploadUrl}
+    // SDJ01 
+    // const longUrl = formData.get("long_url");
+    // const origin = url.origin;
+
+    
+    // if (typeof longUrl !== "string" || !longUrl) {
+    //   return { success: false, message: "Invalid URL" };
+    // }
 
     try {
       const result = await sql.begin(async (tx: any) => {
-        
-       const[existingRow] = await tx`
+        const [existingRow] = await tx`
           SELECT short_url
           FROM urlmappings
-          WHERE long_url = ${longUrl}
+          WHERE long_url = ${pasteId}
             AND expiry_time >= NOW()
           LIMIT 1
-          
         `;
         //find unused short urls
-        if(existingRow){
+        if (existingRow) {
           return `${origin}/${existingRow.short_url}`
-        }else{
-
+        } else {
           const [claimed] = await tx`
           WITH candidate AS (
             SELECT id
@@ -50,16 +57,14 @@ export const actions = {
             FOR UPDATE SKIP LOCKED
             )
             UPDATE urlmappings
-            SET long_url = ${longUrl},
+            SET long_url = ${pasteId},
             expiry_time = NOW() + INTERVAL '1 year'
             FROM candidate
             WHERE urlmappings.id = candidate.id
             RETURNING short_url
             `;
-            
-            
-            return `${origin}/${claimed.short_url}`;
-          
+
+          return `${origin}/${claimed.short_url}`;
         }
       });
       return { success: true, shortUrl: result };
