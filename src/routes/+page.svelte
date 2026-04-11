@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
+    import { applyAction, deserialize, enhance } from '$app/forms';
     import type { ActionData, PageProps } from './$types';
 
     let { data, form } =$props();
@@ -28,15 +28,36 @@
         }
     }
 </script>
+
 <h1>SDJ 01 + 02: URL Shortener/Paste Bin</h1>
 
 
 <form method="POST" action="?/getS3SignedUrl" use:enhance={({ }) => {
     return async ({ result }) => {
         if(result.type === 'success'){
-            //await fetch(result.data.uploadUrl, { method: 'PUT', body: content });
+            const {uploadUrl, pasteId}:any = result.data
+            const uploadRes = await fetch(uploadUrl, { method: 'PUT', body: content });
+            
+            if(!uploadRes.ok) {
+                console.error('Upload Failed')
+                return
+            }
+            const formData = new FormData()
+            formData.append('pasteId', pasteId)
 
-        }
+            const response = await fetch('?/finalize', {
+                method:'POST',
+                body: formData
+            })
+
+            if(!response.ok){
+                console.error('Finalize Write Failed')
+                return
+            }
+           
+            const resResult = deserialize(await response.text())
+            applyAction(resResult)      
+        }  
     }
 }}>
     <label for="paste">New Paste</label>

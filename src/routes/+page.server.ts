@@ -25,7 +25,7 @@ export const actions = {
     if (!res.ok) return error(500, { message: 'Failed to create paste'})
 
     const { pasteId, uploadUrl } = await res.json()
-    return { pasteId, uploadUrl}
+    
     // SDJ01 
     // const longUrl = formData.get("long_url");
     // const origin = url.origin;
@@ -34,7 +34,9 @@ export const actions = {
     // if (typeof longUrl !== "string" || !longUrl) {
     //   return { success: false, message: "Invalid URL" };
     // }
-
+  finalize: async({}) =>{
+    
+  }
     try {
       const result = await sql.begin(async (tx: any) => {
         const [existingRow] = await tx`
