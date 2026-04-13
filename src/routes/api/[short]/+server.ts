@@ -3,10 +3,12 @@ import sql from "$lib/server/db";
 import redis from "$lib/server/redis";
 
 export const GET = async ({ params }) => {
+    //Check cache
     const cachedKey = `url:${params.short}`;
     const cachedUrl = await redis.get(cachedKey);
     if (cachedUrl) throw redirect(302, cachedUrl);
-
+    
+    //Not in cache so get it from db
     const [row] = await sql`
         SELECT 
             long_url,

@@ -6,33 +6,12 @@
     let content = $state('')
     let loading = $state(false)
     
-    const submitPaste = async () =>{
-        loading = true
-        
-        try{
-            const res = await fetch ('/api/paste', {method:'POST'})
-            const { uploadUrl } = await res.json()
-            
-            
-            const uploadRes = await fetch(uploadUrl, {
-                method: 'PUT',
-                body: content,
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            })
-        } catch(err){
-            console.log(err)
-        } finally {
-            loading = false;
-        }
-    }
 </script>
 
 <h1>SDJ 01 + 02: URL Shortener/Paste Bin</h1>
 
 
-<form method="POST" action="?/getS3SignedUrl" use:enhance={({ }) => {
+<form method="POST" action="?/s3Upload" use:enhance={({ }) => {
     return async ({ result }) => {
         if(result.type === 'success'){
             const {uploadUrl, pasteId}:any = result.data
@@ -71,7 +50,7 @@
     </label> 
     -->
 
-    <button type="submit" onclick={submitPaste}>{loading ? 'Uploading...' : 'Create Paste'}</button>
+    <button type="submit" >{loading ? 'Uploading...' : 'Create Paste'}</button>
 </form>
 {#if form?.success}
 <div>

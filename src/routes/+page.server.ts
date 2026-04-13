@@ -16,16 +16,15 @@ export const load: PageServerLoad = async ({ url }) => {
 };
 
 export const actions = {
-  getS3SignedUrl: async ({ request, fetch }) => {
-    const data = await request.formData()
+  
+  s3Upload: async ({ fetch }) => {
     //SDJ02
-    const content = data.get('content')
-
+    
     const res = await fetch('/api/paste', {method:'POST'})
     if (!res.ok) return error(500, { message: 'Failed to create paste'})
 
     const { pasteId, uploadUrl } = await res.json()
-    
+    return {pasteId, uploadUrl}
     // SDJ01 
     // const longUrl = formData.get("long_url");
     // const origin = url.origin;
@@ -34,9 +33,16 @@ export const actions = {
     // if (typeof longUrl !== "string" || !longUrl) {
     //   return { success: false, message: "Invalid URL" };
     // }
-  finalize: async({}) =>{
+  },
+  finalize: async({ request })=>{
+    const data = await request.formData()
+    const pasteId = data.get('pasteId')
     
-  }
+    if (typeof pasteId !== 'string') {
+      return { success: false, message: 'Invalid pasteId' };
+    }
+
+    
     try {
       const result = await sql.begin(async (tx: any) => {
         const [existingRow] = await tx`
@@ -69,10 +75,14 @@ export const actions = {
           return `${origin}/${claimed.short_url}`;
         }
       });
-      return { success: true, shortUrl: result };
+      return { 
+        success: true, 
+        shortUrl: result,
+      };
     } catch (error) {
       console.error(error);
       return { success: false, message: "Could not add URL to database." };
     }
-  },
+  }
+  
 };
