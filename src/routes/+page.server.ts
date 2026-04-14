@@ -34,10 +34,10 @@ export const actions = {
     //   return { success: false, message: "Invalid URL" };
     // }
   },
-  finalize: async({ request })=>{
+  finalize: async({ request,url })=>{
     const data = await request.formData()
     const pasteId = data.get('pasteId')
-    
+    const origin = url.origin;
     if (typeof pasteId !== 'string') {
       return { success: false, message: 'Invalid pasteId' };
     }
