@@ -2,9 +2,9 @@ import { error, redirect } from "@sveltejs/kit";
 import sql from "$lib/server/db";
 import redis from "$lib/server/redis";
 
-export const GET = async ({ params }) => {
+export const getPasteByShort = async (short:string) => {
     //Check cache
-    const cachedKey = `url:${params.short}`;
+    const cachedKey = `url:${short}`;
     const cachedUrl = await redis.get(cachedKey);
     if (cachedUrl) throw redirect(302, cachedUrl);
     
@@ -14,7 +14,7 @@ export const GET = async ({ params }) => {
             long_url,
             EXTRACT(EPOCH FROM (expiry_time - NOW())) AS ttl 
         FROM urlmappings
-        WHERE short_url = ${params.short}
+        WHERE short_url = ${short}
     `
     ;
 
@@ -26,5 +26,5 @@ export const GET = async ({ params }) => {
         await redis.set(cachedKey, row.long_url, { EX: Math.floor(row.ttl) });
     }
 
-    throw redirect(302, row.long_url);
+    //throw redirect(302, row.long_url);
 };

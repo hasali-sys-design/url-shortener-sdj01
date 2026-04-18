@@ -29,9 +29,28 @@ to the long url.
 suffixes right off the bat
 - Also need to give consideration on how we shard the data.
 
+
+
+# Pastebin
+
+Systems Design Journey 02: Building on top of sdj01, we're introducing object stores to handle large text files.
+
+## Stack
+
+Sveltekit - Gain insight into how the backend works. 
+PostgreSQL - A strong versatile engine that meets BOE requirements
+Redis - Look aside caching
+AWS S3 - Object Store
+
+## Notes
+
+Text is stored in s3 which provides a signed url, which in turn has a unique id. This id is stored in our db.
+
 ## Start
 ```
-docker run -d -p 6379:6379 --name redis redis
+docker desktop start
+docker run -d -p 6379:6379 --name redis-url-shortener redis
+or docker start redis-url-shortener
 npm run build
 pm2 start build/index.js -i max
 ```
